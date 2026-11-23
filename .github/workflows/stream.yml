@@ -1,0 +1,37 @@
+name: Binance Vision Tick Streamer (5h)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'
+
+concurrency:
+  group: tick-streamer-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 320
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --no-cache-dir pandas pyarrow websockets huggingface_hub
+
+      - name: Run 5h Tick Streamer
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ secrets.HF_REPO_ID }}
+          SYMBOL: "adausdt"
+          RUN_SECONDS: "18000"
+          FLUSH_SECONDS: "600"
+        run: python stream_to_hf.py
