@@ -12,8 +12,8 @@ from huggingface_hub import HfApi
 SYMBOL = os.getenv("SYMBOL", "adausdt").lower()
 WS_URL = f"wss://data-stream.binance.vision:443/ws/{SYMBOL}@trade"
 
-HF_TOKEN = os.getenv("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")
-HF_REPO_ID = os.getenv("movielogline/trade")  # Например: "username/ada-ticks-stream"
+HF_TOKEN = os.getenv("HF_TOKEN")
+HF_REPO_ID = os.getenv("HF_REPO_ID", "movielogline/trade")
 
 
 
