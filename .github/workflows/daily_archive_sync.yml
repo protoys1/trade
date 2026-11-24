@@ -1,0 +1,38 @@
+name: Daily Archive Sync to HuggingFace
+
+on:
+  workflow_dispatch:
+    inputs:
+      days_back:
+        description: 'За сколько прошлых закрытых дней проверить архивы'
+        required: false
+        default: '3'
+  schedule:
+    # Запуск каждый день в 06:00 UTC (к этому времени Binance гарантированно выкладывает вчерашний архив)
+    - cron: '0 6 * * *'
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --no-cache-dir pandas pyarrow requests huggingface_hub
+
+      - name: Sync Daily Archives & Replace Chunks
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ secrets.HF_REPO_ID }}
+          SYMBOL: "ADAUSDT"
+          DAYS_BACK: ${{ github.event.inputs.days_back || '3' }}
+        run: python sync_daily_archive.py
