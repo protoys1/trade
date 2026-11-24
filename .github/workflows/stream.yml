@@ -33,5 +33,5 @@ jobs:
           HF_REPO_ID: ${{ secrets.HF_REPO_ID }}
           SYMBOL: "adausdt"
           RUN_SECONDS: "18000"
-          FLUSH_SECONDS: "60"
+          FLUSH_SECONDS: "600"
         run: python stream_to_hf.py
