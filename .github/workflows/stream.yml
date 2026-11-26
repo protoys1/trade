@@ -1,10 +1,10 @@
-name: Binance Vision Tick Streamer (5h)
+name: Binance Vision Tick Streamer (1h Relay)
 
 on:
   workflow_dispatch:
   schedule:
-    # Резервный "сторож" на 23-й минуте (вдали от пиковой нагрузки начала часа)
-    - cron: '23 */6 * * *'
+    # Резервный "сторож" каждый час на 7-й минуте (если прошлую VM внезапно оборвало — простой < 1ч)
+    - cron: '7 * * * *'
 
 concurrency:
   group: tick-streamer-${{ github.ref }}
@@ -12,11 +12,11 @@ concurrency:
 
 jobs:
   stream:
-    runs-on: ubuntu-latest
-    timeout-minutes: 330 # Страховка 5ч 30м
+    runs-on: ubuntu-24.04
+    timeout-minutes: 65
     permissions:
       contents: read
-      actions: write      # Разрешает GITHUB_TOKEN запускать следующую смену
+      actions: write
 
     steps:
       - name: Checkout repository
@@ -31,22 +31,23 @@ jobs:
         run: |
           pip install --no-cache-dir pandas pyarrow websockets huggingface_hub
 
-      - name: Run 5h Tick Streamer
+      - name: Run 55m Tick Streamer
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_REPO_ID: ${{ secrets.HF_REPO_ID }}
           SYMBOL: "adausdt"
-          RUN_SECONDS: "18000"   # 5 часов работы
+          RUN_SECONDS: "3300"    # 55 минут работы
           FLUSH_SECONDS: "600"   # Сброс на HF каждые 10 минут
         run: python stream_to_hf.py
 
-      - name: Handover to next 5h shift (Self-Restart)
+      - name: Handover to next 55m shift (Self-Restart)
         if: ${{ !cancelled() }}
         run: |
-          echo "Запуск следующей 5-часовой смены по эстафете..."
+          WF_FILE=$(basename "${GITHUB_WORKFLOW_REF%@*}")
+          echo "Запуск следующей смены по эстафете ($WF_FILE)..."
           curl -fsSL -X POST \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/stream.yml/dispatches" \
-            -d '{"ref":"${{ github.ref_name }}"}'
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/${WF_FILE}/dispatches" \
+            -d "{\"ref\":\"${{ github.ref_name }}\"}" || true
