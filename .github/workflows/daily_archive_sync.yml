@@ -8,20 +8,20 @@ on:
         required: false
         default: '3'
   schedule:
-    # Запуск каждый день в 06:00 UTC (к этому времени Binance гарантированно выкладывает вчерашний архив)
+    # Запуск каждый день в 06:00 UTC (когда вчерашний день закрыт и выложен на Binance)
     - cron: '0 6 * * *'
 
 jobs:
   archive:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
