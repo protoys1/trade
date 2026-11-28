@@ -9,7 +9,7 @@ on:
         default: '3'
   schedule:
     # Запуск каждый день в 06:00 UTC (когда вчерашний день закрыт и выложен на Binance)
-    - cron: '0 6 * * *'
+    - cron: '0 8,16 * * *'
 
 jobs:
   archive:
